@@ -1,0 +1,16 @@
+# Ignore Git & CI artifacts
+.git
+.github
+
+# Binaries
+queue-broker
+*.exe
+
+# Coverage & test output
+coverage.*
+*.out
+
+# IDE / editor settings
+.vscode/
+.idea/
+*.sublime*

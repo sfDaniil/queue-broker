@@ -1,0 +1,23 @@
+# Ignore Git & CI artifacts
+.git
+.github
+
+# Binaries
+queue-broker
+*.exe
+
+# env file
+.env
+
+# Coverage & test output
+coverage.*
+*.out
+
+# IDE specific
+.vscode/
+.idea/
+*.sublime*
+
+# Go workspace file
+go.work
+go.work.sum
