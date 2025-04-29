@@ -1,19 +1,14 @@
-//go:build integration
-// +build integration
-
 package main
 
 import (
-	"context"
 	"flag"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
-	"queue-broker/internal/broker"
+	"queue-broker/internal/adapters/httpapi"
+	"queue-broker/internal/adapters/memory"
+	"queue-broker/internal/app"
 )
 
 func main() {
@@ -23,39 +18,11 @@ func main() {
 	getTimeOut := flag.Duration("timeout", 30*time.Second, "GET timeout")
 	flag.Parse()
 
-	b := broker.New(*maxQ, *maxM)
-	h := &broker.Handler{Broker: b, GetTimeout: *getTimeOut}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/queue/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPut:
-			h.Put(w, r)
-		case http.MethodGet:
-			h.Get(w, r)
-		default:
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	srv := &http.Server{
-		Addr:    ":" + *port,
-		Handler: mux,
-	}
-
-	// graceful-shutdown
-	go func() {
-		sig := make(chan os.Signal, 1)
-		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
-		<-sig
-		log.Println("shutdown")
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		_ = srv.Shutdown(ctx)
-	}()
+	repo := memory.NewRepo(*maxQ, *maxM)
+	service := app.NewService(repo)
+	handler := httpapi.NewHandler(service, *getTimeOut)
 
 	log.Printf("* http://localhost:%s", *port)
-	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		log.Fatalf("server error: %v", err)
-	}
+	err := http.ListenAndServe(":"+*port, handler)
+	log.Fatal(err)
 }

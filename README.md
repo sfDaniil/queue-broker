@@ -10,7 +10,6 @@
 * **GET /queue/{name}?timeout=N** – извлекает сообщения FIFO, поддерживает long‑polling  
 * Настраивается порт, таймаут по умолчанию, лимит очередей и сообщений  
 * In‑memory‑хранилище с защитой от переполнения  
-* Graceful‑shutdown  
 * Только стандартная библиотека Go  
 * Unit‑тесты, Makefile для lint/coverage/Docker‑сборки
 
@@ -69,18 +68,26 @@ curl http://localhost:8080/queue/pets?timeout=10
 
 ## Структура проекта
 
-```Text
+```Go
 .
-├── cmd/server        # точка входа (флаги, HTTP‑mux)
+├── cmd
+│   └── server
+│       └── main.go
 └── internal
-    ├── queue         # логика FIFO-очереди
-    └── broker        # брокер, HTTP‑обработчик, ошибки
+    ├── app
+    │   ├── ports.go
+    │   └── service.go
+    └── adapters
+        ├── httpapi
+        │   └── handler.go
+        └── memory
+            └── repo.go
 ```
 
 ## Разработка
 
 ```bash
-make test            # юнит‑тесты + покрытие
+make test            # юнит‑тесты
 make lint            # golangci‑lint
 make cover-html      # HTML‑отчёт покрытия
 ```
